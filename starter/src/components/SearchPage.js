@@ -2,30 +2,53 @@ import { Link } from "react-router-dom";
 import * as BooksAPI from "../BooksAPI";
 import BookDetails from "./BookDetails";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 
-const SearchPage = () => {
-  const [books, setBooks] = useState([]);
+const SearchPage = ({ shelfs }) => {
+  const [searchedBooks, setSearchedBooks] = useState([]);
   const [query, setQuery] = useState("");
-  let navigate = useNavigate();
+  const [bookShelfs, setBookShelfs] = useState(shelfs);
+
   useEffect(() => {
     return () => {
-      setBooks([]);
+      setSearchedBooks([]);
     };
   }, []);
 
   const searchBooks = async (query) => {
-    const results = await BooksAPI.search(query, 10);
-    setBooks(results);
+    BooksAPI.search(query, 10)
+      .then((result) => {
+        if (result instanceof Array) {
+          setSearchedBooks(result);
+        } else {
+          setSearchedBooks([]);
+        }
+      })
+      .catch((e) => {
+        setSearchedBooks([]);
+      });
   };
 
   const updateQuery = (query) => {
     setQuery(query.trim());
-    query === "" ? setBooks([]) : searchBooks(query);
+    query === "" ? setSearchedBooks([]) : searchBooks(query);
   };
 
-  const updatedBook = () => {
-    navigate("/");
+  const updatedBook = (result) => {
+    let shelf = {};
+    Object.keys(result).forEach((element) => {
+      const a = Object.fromEntries(result[element].map((x) => [x, element]));
+      shelf = { ...shelf, ...a };
+    });
+    setBookShelfs(shelf);
+  };
+
+  const getShelf = (book) => {
+    let shelf = bookShelfs[book.id];
+    if (shelf === null || shelf === undefined) {
+      return "none";
+    }
+    return shelf;
   };
 
   return (
@@ -46,15 +69,23 @@ const SearchPage = () => {
       </div>
       <div className="search-books-results">
         <ol className="books-grid">
-          {books.map((book) => (
+          {searchedBooks.map((book) => (
             <li key={book.id} className="book">
-              <BookDetails book={book} onUpdated={updatedBook} />
+              <BookDetails
+                book={book}
+                shelf={getShelf(book)}
+                onUpdated={updatedBook}
+              />
             </li>
           ))}
         </ol>
       </div>
     </div>
   );
+};
+
+SearchPage.prototypes = {
+  shelfs: PropTypes.array.isRequired,
 };
 
 export default SearchPage;

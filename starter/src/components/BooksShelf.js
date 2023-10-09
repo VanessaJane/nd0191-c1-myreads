@@ -9,7 +9,11 @@ const BooksShelf = ({ title, books, onUpdated }) => {
         <ol className="books-grid">
           {books.map((book) => (
             <li key={book.id} className="book">
-              <BookDetails book={book} onUpdated={onUpdated} />
+              <BookDetails
+                book={book}
+                shelf={book.shelf}
+                onUpdated={onUpdated}
+              />
             </li>
           ))}
         </ol>

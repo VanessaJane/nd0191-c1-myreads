@@ -2,34 +2,31 @@ import BooksShelf from "./BooksShelf";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import * as BooksAPI from "../BooksAPI";
+import PropTypes from "prop-types";
 
-const ListBooks = () => {
-  const [currentlyReadingBooks, setCurrentlyReadingBooks] = useState([]);
-  const [wantToReadBooks, setWantToReadBooks] = useState([]);
-  const [readBooks, setReadBooks] = useState([]);
+const ListBooks = ({ saveShelfs }) => {
+  const [books, setBooks] = useState([]);
 
   const fetchBooks = async () => {
     const results = await BooksAPI.getAll();
-    setCurrentlyReadingBooks(
-      results.filter((book) => book.shelf === "currentlyReading")
-    );
-    setWantToReadBooks(results.filter((book) => book.shelf === "wantToRead"));
-    setReadBooks(results.filter((book) => book.shelf === "read"));
+    setBooks(results);
   };
 
   useEffect(() => {
     fetchBooks();
 
     return () => {
-      setCurrentlyReadingBooks([]);
-      setWantToReadBooks([]);
-      setReadBooks([]);
+      setBooks([]);
     };
   }, []);
 
-  const onUpdatedShelf = () => {
-    console.log("Call reload");
+  const onUpdateShelf = () => {
     fetchBooks();
+  };
+
+  const gotoSearch = () => {
+    let shelfs = Object.fromEntries(books.map((x) => [x.id, x.shelf]));
+    saveShelfs(shelfs);
   };
 
   return (
@@ -41,26 +38,32 @@ const ListBooks = () => {
         <div>
           <BooksShelf
             title="Currently Reading"
-            books={currentlyReadingBooks}
-            onUpdated={onUpdatedShelf}
+            books={books.filter((book) => book.shelf === "currentlyReading")}
+            onUpdated={onUpdateShelf}
           />
           <BooksShelf
             title="Want to Read"
-            books={wantToReadBooks}
-            onUpdated={onUpdatedShelf}
+            books={books.filter((book) => book.shelf === "wantToRead")}
+            onUpdated={onUpdateShelf}
           />
           <BooksShelf
             title="Read"
-            books={readBooks}
-            onUpdated={onUpdatedShelf}
+            books={books.filter((book) => book.shelf === "read")}
+            onUpdated={onUpdateShelf}
           />
         </div>
       </div>
       <div className="open-search">
-        <Link to="/search">Add a book</Link>
+        <Link to="/search" onClick={gotoSearch}>
+          Add a book
+        </Link>
       </div>
     </div>
   );
+};
+
+ListBooks.prototypes = {
+  saveShelfs: PropTypes.func.isRequired,
 };
 
 export default ListBooks;

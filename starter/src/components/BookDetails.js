@@ -1,23 +1,21 @@
 import * as BooksAPI from "../BooksAPI";
 import PropTypes from "prop-types";
+import { useState } from "react";
 
-const BookDetails = ({ book, onUpdated }) => {
+const BookDetails = ({ book, shelf, onUpdated }) => {
+  const [selectedShelf, setSelectedShelf] = useState(shelf);
   const onChangeShelf = (event) => {
     if (book.shelf === event.target.value) {
       return;
     }
+    setSelectedShelf(event.target.value);
     updateBook(event.target.value);
   };
 
   const updateBook = async (shelf) => {
-    BooksAPI.update(book, shelf)
-      .then((result) => {
-        console.log("Success!", result);
-        onUpdated();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    BooksAPI.update(book, shelf).then((result) => {
+      onUpdated(result);
+    });
   };
 
   const getAuthorsName = (book) => {
@@ -47,7 +45,7 @@ const BookDetails = ({ book, onUpdated }) => {
           }}
         ></div>
         <div className="book-shelf-changer">
-          <select value={book.shelf} onChange={onChangeShelf}>
+          <select value={selectedShelf} onChange={onChangeShelf}>
             <option value="none" disabled>
               Move to...
             </option>
@@ -66,6 +64,7 @@ const BookDetails = ({ book, onUpdated }) => {
 
 BookDetails.prototypes = {
   book: PropTypes.object.isRequired,
+  shelf: PropTypes.string.isRequired,
   onUpdated: PropTypes.func.isRequired,
 };
 
