@@ -3,11 +3,12 @@ import * as BooksAPI from "../BooksAPI";
 import BookDetails from "./BookDetails";
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import debounce from "lodash.debounce";
 
 const SearchPage = ({ shelfs }) => {
   const [searchedBooks, setSearchedBooks] = useState([]);
   const [query, setQuery] = useState("");
-  const [bookShelfs, setBookShelfs] = useState(shelfs);
+  const [bookShelfs, setBookShelfs] = useState(shelfs); //keep state for next search
 
   useEffect(() => {
     return () => {
@@ -15,11 +16,12 @@ const SearchPage = ({ shelfs }) => {
     };
   }, []);
 
-  const searchBooks = async (query) => {
+  const searchBooks = debounce((query) => {
+    if (!query) return setSearchedBooks([]);
     BooksAPI.search(query, 10)
       .then((result) => {
         if (result instanceof Array) {
-          setSearchedBooks(result);
+          setSearchedBooks(mapBooksWithCorrectShelves(result, bookShelfs));
         } else {
           setSearchedBooks([]);
         }
@@ -27,6 +29,18 @@ const SearchPage = ({ shelfs }) => {
       .catch((e) => {
         setSearchedBooks([]);
       });
+  }, 500);
+
+  const mapBooksWithCorrectShelves = (books, shelves) => {
+    return books.map((e) => {
+      let shelf = shelves[e.id];
+      if (shelf === null || shelf === undefined) {
+        e.shelf = "none";
+      } else {
+        e.shelf = shelf;
+      }
+      return e;
+    });
   };
 
   const updateQuery = (query) => {
@@ -35,20 +49,13 @@ const SearchPage = ({ shelfs }) => {
   };
 
   const updatedBook = (result) => {
-    let shelf = {};
+    let shelves = {};
     Object.keys(result).forEach((element) => {
       const a = Object.fromEntries(result[element].map((x) => [x, element]));
-      shelf = { ...shelf, ...a };
+      shelves = { ...shelves, ...a };
     });
-    setBookShelfs(shelf);
-  };
-
-  const getShelf = (book) => {
-    let shelf = bookShelfs[book.id];
-    if (shelf === null || shelf === undefined) {
-      return "none";
-    }
-    return shelf;
+    setSearchedBooks(mapBooksWithCorrectShelves(searchedBooks, shelves));
+    setBookShelfs(shelves);
   };
 
   return (
@@ -68,17 +75,19 @@ const SearchPage = ({ shelfs }) => {
         </div>
       </div>
       <div className="search-books-results">
-        <ol className="books-grid">
-          {searchedBooks.map((book) => (
-            <li key={book.id} className="book">
-              <BookDetails
-                book={book}
-                shelf={getShelf(book)}
-                onUpdated={updatedBook}
-              />
-            </li>
-          ))}
-        </ol>
+        {searchedBooks.length > 0 ? (
+          <ol className="books-grid">
+            {searchedBooks.map((book) => (
+              <li key={book.id} className="book">
+                <BookDetails book={book} onUpdated={updatedBook} />
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div className="book-no-found-box">
+            <p className=" book-no-found-message">Book Not Found</p>
+          </div>
+        )}
       </div>
     </div>
   );

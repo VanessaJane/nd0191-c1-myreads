@@ -175,3 +175,17 @@ body,
   text-align: center;
   font-size: 0.8em;
 }
+
+/* no book message */
+.book-no-found-box  {
+  position: relative;
+  border: 2px solid gray;
+  padding: 10px;
+}
+
+.book-no-found-message {
+  text-align: center;
+  text-transform: uppercase;
+  color: #cd1b0b;
+  font-size: 2em;
+}

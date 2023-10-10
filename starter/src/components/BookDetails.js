@@ -1,14 +1,43 @@
 import * as BooksAPI from "../BooksAPI";
 import PropTypes from "prop-types";
-import { useState } from "react";
 
-const BookDetails = ({ book, shelf, onUpdated }) => {
-  const [selectedShelf, setSelectedShelf] = useState(shelf);
+const BookDetails = ({ book, onUpdated }) => {
+  const shelves = [
+    {
+      id: "0",
+      shelfDisplayName: "Move to...",
+      isDisable: true,
+    },
+    {
+      id: "1",
+      shelfName: "currentReading",
+      shelfDisplayName: "Currently Reading",
+      isDisable: false,
+    },
+    {
+      id: "2",
+      shelfName: "wantToRead",
+      shelfDisplayName: "Want to Read",
+      isDisable: false,
+    },
+    {
+      id: "3",
+      shelfName: "read",
+      shelfDisplayName: "Read",
+      isDisable: false,
+    },
+    {
+      id: "4",
+      shelfName: "none",
+      shelfDisplayName: "None",
+      isDisable: false,
+    },
+  ];
+
   const onChangeShelf = (event) => {
     if (book.shelf === event.target.value) {
       return;
     }
-    setSelectedShelf(event.target.value);
     updateBook(event.target.value);
   };
 
@@ -45,14 +74,18 @@ const BookDetails = ({ book, shelf, onUpdated }) => {
           }}
         ></div>
         <div className="book-shelf-changer">
-          <select value={selectedShelf} onChange={onChangeShelf}>
-            <option value="none" disabled>
-              Move to...
-            </option>
-            <option value="currentlyReading">Currently Reading</option>
-            <option value="wantToRead">Want to Read</option>
-            <option value="read">Read</option>
-            <option value="none">None</option>
+          <select value={book.shelf} onChange={onChangeShelf}>
+            {shelves.map((shelf) => {
+              return (
+                <option
+                  key={shelf.id}
+                  value={shelf.shelfName}
+                  disabled={shelf.isDisable}
+                >
+                  {shelf.shelfDisplayName}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>
@@ -64,7 +97,6 @@ const BookDetails = ({ book, shelf, onUpdated }) => {
 
 BookDetails.prototypes = {
   book: PropTypes.object.isRequired,
-  shelf: PropTypes.string.isRequired,
   onUpdated: PropTypes.func.isRequired,
 };
 
